@@ -1,29 +1,35 @@
 <launch>
-  <!-- rosbridge -->
+  <!-- rosbridge 
   <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" />
+  -->  
 
   <!-- rosserial -->
-  <node pkg="rosserial_python" type="serial_node.py" name="rosserial_node" args="/dev/ttyACM0"/>
-  
+  <node pkg="rosserial_python" type="serial_node.py" name="rosserial_node" args="/dev/ttyACM0"/>  
+
   <!-- zed camera  -->
   <include file="$(find zed_wrapper)/launch/zed.launch" />
 
   <!-- depth image to laserscan  -->
   <include file="$(find depthimage_to_laserscan)/test/rostest/depthimage_to_laserscan.test" />
 
-  <!-- csi_cam -->
+  <!-- csi_cam 
   <include file="$(find jetson_csi_cam)/jetson_csi_cam.launch" />
+  -->
 
-  <!-- aruco_detect -->
+  <!-- aruco_detect
   <include file="$(find aruco_detect)/launch/aruco_detect.launch" />
+  -->
 
   <!-- urdf -->
   <include file="$(find wheelchair_jetson)/launch/urdf.launch" />
 
   <!-- zed_odom tf publisher -->
   <node pkg="wheelchair_jetson" type="zed_odom.py" name="zed_odom_tf"/>
+  
+  <!-- handle zed/scan to obstacle info -->
+  <node pkg="wheelchair_jetson" type="scan_handler.py" name="scan_handler"/>
 
-  <!-- waypoint_nav -->
+  <!-- waypoint_nav 
   <include file="$(find waypoint_nav)/launch/fiducial_encoder_waypoint.launch" />
-
+  -->
 </launch>
