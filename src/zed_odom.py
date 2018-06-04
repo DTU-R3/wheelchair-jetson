@@ -39,7 +39,7 @@ class zed_footprint_odom(object):
     t = float(t_diff) / 1000
     
     # return if the time between is smaller than 100 ms
-    if t < 100:
+    if t < 0.1:
       return
   
     ros_now = rospy.Time.now()

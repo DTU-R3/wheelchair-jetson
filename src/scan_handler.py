@@ -42,7 +42,7 @@ class scan_handler(object):
     t = float(t_diff) / 1000
     
     # return if the time between is smaller than 100 ms
-    if t < 100:
+    if t < 0.1:
       return
     
     angle_increment = scan.angle_increment
