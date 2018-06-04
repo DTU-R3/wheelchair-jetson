@@ -7,10 +7,12 @@ from sensor_msgs.msg import LaserScan
 
 class scan_handler(object):
   def __init__(self):
-    self.range = 15.0 * math.pi / 180.0
+    self.range = 25.0 * math.pi / 180.0
     self.front_range = Float32()
     self.left_range = Float32()
     self.right_range = Float32()
+    self.pre_scan = LaserScan()
+    self.pre_scan_get = False
 
     # Init ROS node
     rospy.init_node('scan_handler')
@@ -29,6 +31,20 @@ class scan_handler(object):
       rospy.sleep(1)
   
   def scanCB(self, scan):
+    
+    if not self.pre_scan_get:
+      self.pre_scan = scan
+      self.pre_scan_get = True
+      return
+    
+    # time between two measurement, in ms
+    t_diff = str((scan.header.stamp - self.pre_scan.header.stamp) / 1000000)
+    t = float(t_diff) / 1000
+    
+    # return if the time between is smaller than 100 ms
+    if t < 100:
+      return
+    
     angle_increment = scan.angle_increment
     thres = int(self.range / angle_increment)
 
@@ -61,7 +77,8 @@ class scan_handler(object):
         l_min = measurement
     self.left_range.data = l_min
     self.leftPub.publish(self.left_range)
-
+    
+    self.pre_scan = scan
 
 if __name__ == '__main__':
   scan_hl = scan_handler() 

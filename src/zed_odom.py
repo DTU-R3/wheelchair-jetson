@@ -28,6 +28,20 @@ class zed_footprint_odom(object):
       rospy.sleep(1)
   
   def zedCB(self, odo):
+    
+    if not self.pre_odo_get:
+      self.pre_odo = odo
+      self.pre_odo_get = True
+      return
+    
+    # time between two measurement, in ms
+    t_diff = str((odo.header.stamp - self.pre_odo.header.stamp) / 1000000)
+    t = float(t_diff) / 1000
+    
+    # return if the time between is smaller than 100 ms
+    if t < 100:
+      return
+  
     ros_now = rospy.Time.now()
     self._OdometryTransformBroadcaster.sendTransform(
       (odo.pose.pose.position.x, odo.pose.pose.position.y, 0),
@@ -44,23 +58,15 @@ class zed_footprint_odom(object):
     odometry.child_frame_id = "zed"
     odometry.pose.pose.position.z = 0
 
-    # Set the velocity for the odometry
-    if self.pre_odo_get:
-      # time between two measurement, in ms
-      t_diff = str((odo.header.stamp - self.pre_odo.header.stamp) / 1000000)
-      t = float(t_diff) / 1000
-      if t==0:
-        return
-      odo_euler = tf.transformations.euler_from_quaternion((odo.pose.pose.orientation.x, odo.pose.pose.orientation.y, odo.pose.pose.orientation.z, odo.pose.pose.orientation.w))
-      pre_odo_euler = tf.transformations.euler_from_quaternion((self.pre_odo.pose.pose.orientation.x, self.pre_odo.pose.pose.orientation.y, self.pre_odo.pose.pose.orientation.z, self.pre_odo.pose.pose.orientation.w))
-      vel_x = (odo.pose.pose.position.x - self.pre_odo.pose.pose.position.x) / t
-      vel_y = (odo.pose.pose.position.y - self.pre_odo.pose.pose.position.y) / t
-      odo.twist.twist.linear.x = math.sqrt( vel_x**2 + vel_y**2 )
-      ang_vel_z = (odo_euler[2] - pre_odo_euler[2]) / t
-      odo.twist.twist.angular.z = ang_vel_z
+    odo_euler = tf.transformations.euler_from_quaternion((odo.pose.pose.orientation.x, odo.pose.pose.orientation.y, odo.pose.pose.orientation.z, odo.pose.pose.orientation.w))
+    pre_odo_euler = tf.transformations.euler_from_quaternion((self.pre_odo.pose.pose.orientation.x, self.pre_odo.pose.pose.orientation.y, self.pre_odo.pose.pose.orientation.z, self.pre_odo.pose.pose.orientation.w))
+    vel_x = (odo.pose.pose.position.x - self.pre_odo.pose.pose.position.x) / t
+    vel_y = (odo.pose.pose.position.y - self.pre_odo.pose.pose.position.y) / t
+    odo.twist.twist.linear.x = math.sqrt( vel_x**2 + vel_y**2 )
+    ang_vel_z = (odo_euler[2] - pre_odo_euler[2]) / t
+    odo.twist.twist.angular.z = ang_vel_z
     self._OdometryPublisher.publish(odometry)
     self.pre_odo = odo
-    self.pre_odo_get = True
 
 if __name__ == '__main__':
   zed_footprint = zed_footprint_odom() 
